@@ -1,0 +1,147 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  clerkUserId   String    @unique
+  email         String    @unique
+  name          String?
+  imageUrl      String?
+  createdIssues Issue[]   @relation("Reporter")
+  assignedIssues Issue[]  @relation("Assignee")
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model Project {
+  id             String   @id @default(cuid())
+  name           String
+  key            String
+  description    String?
+  organizationId String    // This will store the Clerk organization ID
+  sprints        Sprint[]
+  issues         Issue[]
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@unique([organizationId, key])
+}
+
+model Sprint {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  startDate DateTime
+  endDate   DateTime
+  status    SprintStatus @default(PLANNED)
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  projectId String
+  issues    Issue[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Issue {
+  id          String     @id @default(cuid())
+  title       String
+  description String?
+  status      IssueStatus
+  order       Int        // This will store the order within its status column
+  priority    IssuePriority
+  assignee    User?      @relation("Assignee", fields: [assigneeId], references: [id])
+  assigneeId  String?
+  reporter    User       @relation("Reporter", fields: [reporterId], references: [id])
+  reporterId  String
+  project     Project    @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  projectId   String
+  sprint      Sprint?    @relation(fields: [sprintId], references: [id], onDelete: SetNull)
+  sprintId    String?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  @@index([status, order])
+}
+
+model DailySummary {
+  id             String   @id @default(cuid())
+  organizationId String
+  date           DateTime
+  tasksAnalyzed  Int
+  tasksByStatus  Json
+  tasksByPriority Json
+  activitiesCount Int
+  analysis       String   @db.Text
+  createdAt      DateTime @default(now())
+
+  @@unique([organizationId, date])
+  @@index([date])
+}
+
+// Subscription related models
+model Subscription {
+  id                   String      @id @default(cuid())
+  orgId                String      @unique
+  planId               String
+  status               String      @default("inactive") // active, past_due, canceled, inactive
+  currentPeriodStart   DateTime
+  currentPeriodEnd     DateTime
+  cancelAtPeriodEnd    Boolean     @default(false)
+  stripeCustomerId     String?
+  stripeSubscriptionId String?     @unique
+  stripePriceId        String?
+  createdAt            DateTime    @default(now())
+  updatedAt            DateTime    @updatedAt
+  plan                 Plan        @relation(fields: [planId], references: [id])
+  apiUsage            APIUsage[]
+}
+
+model Plan {
+  id            String   @id @default(cuid())
+  name          String   // Free, Pro, Enterprise
+  description   String
+  price         Float    // Monthly price
+  yearlyPrice   Float    // Yearly price (with discount)
+  features      String[] // Array of features included
+  requestLimit  Int      // Monthly API request limit
+  subscriptions Subscription[]
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model APIUsage {
+  id            String   @id @default(cuid())
+  subscription  Subscription @relation(fields: [subscriptionId], references: [id])
+  subscriptionId String
+  endpoint      String   // Track which API endpoint was used
+  requestCount  Int      // Number of requests made
+  timestamp     DateTime @default(now())
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([subscriptionId, timestamp])
+}
+
+enum SprintStatus {
+  PLANNED
+  ACTIVE
+  COMPLETED
+}
+
+enum IssueStatus {
+  TODO
+  IN_PROGRESS
+  IN_REVIEW
+  DONE
+}
+
+enum IssuePriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
