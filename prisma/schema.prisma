@@ -8,29 +8,55 @@ datasource db {
 }
 
 model User {
-  id            String    @id @default(cuid())
-  clerkUserId   String    @unique
-  email         String    @unique
-  name          String?
-  imageUrl      String?
-  createdIssues Issue[]   @relation("Reporter")
+  id             String   @id @default(cuid())
+  name           String?
+  email          String?  @unique
+  emailVerified  DateTime?
+  image          String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  organization   Organization? @relation(fields: [organizationId], references: [id])
+  organizationId String?
+  projects       Project[]
+  tasks          Task[]
   assignedIssues Issue[]  @relation("Assignee")
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  reportedIssues Issue[]  @relation("Reporter")
+}
+
+model Organization {
+  id        String   @id @default(cuid())
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  users     User[]
+  projects  Project[]
 }
 
 model Project {
   id             String   @id @default(cuid())
   name           String
-  key            String
   description    String?
-  organizationId String    // This will store the Clerk organization ID
-  sprints        Sprint[]
-  issues         Issue[]
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  organizationId String
+  tasks          Task[]
+  users          User[]
+  sprints        Sprint[]
+  issues         Issue[]
+}
 
-  @@unique([organizationId, key])
+model Task {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  status      String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  project     Project  @relation(fields: [projectId], references: [id])
+  projectId   String
+  assignee    User?    @relation(fields: [assigneeId], references: [id])
+  assigneeId  String?
 }
 
 model Sprint {
@@ -51,7 +77,7 @@ model Issue {
   title       String
   description String?
   status      IssueStatus
-  order       Int        // This will store the order within its status column
+  order       Int
   priority    IssuePriority
   assignee    User?      @relation("Assignee", fields: [assigneeId], references: [id])
   assigneeId  String?
@@ -80,50 +106,6 @@ model DailySummary {
 
   @@unique([organizationId, date])
   @@index([date])
-}
-
-// Subscription related models
-model Subscription {
-  id                   String      @id @default(cuid())
-  orgId                String      @unique
-  planId               String
-  status               String      @default("inactive") // active, past_due, canceled, inactive
-  currentPeriodStart   DateTime
-  currentPeriodEnd     DateTime
-  cancelAtPeriodEnd    Boolean     @default(false)
-  stripeCustomerId     String?
-  stripeSubscriptionId String?     @unique
-  stripePriceId        String?
-  createdAt            DateTime    @default(now())
-  updatedAt            DateTime    @updatedAt
-  plan                 Plan        @relation(fields: [planId], references: [id])
-  apiUsage            APIUsage[]
-}
-
-model Plan {
-  id            String   @id @default(cuid())
-  name          String   // Free, Pro, Enterprise
-  description   String
-  price         Float    // Monthly price
-  yearlyPrice   Float    // Yearly price (with discount)
-  features      String[] // Array of features included
-  requestLimit  Int      // Monthly API request limit
-  subscriptions Subscription[]
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-}
-
-model APIUsage {
-  id            String   @id @default(cuid())
-  subscription  Subscription @relation(fields: [subscriptionId], references: [id])
-  subscriptionId String
-  endpoint      String   // Track which API endpoint was used
-  requestCount  Int      // Number of requests made
-  timestamp     DateTime @default(now())
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-
-  @@index([subscriptionId, timestamp])
 }
 
 enum SprintStatus {

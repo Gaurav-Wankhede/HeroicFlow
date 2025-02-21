@@ -48,70 +48,98 @@ export async function createProject(data) {
 }
 
 export async function getProject(projectId) {
-  const { userId, orgId } = auth();
+  console.log("getProject called with projectId:", projectId);
+  try {
+    const { userId, orgId } = auth();
+    console.log("Auth result:", { userId, orgId });
 
-  if (!userId || !orgId) {
-    throw new Error("Unauthorized");
-  }
+    if (!userId || !orgId) {
+      throw new Error("Unauthorized");
+    }
 
-  // Find user to verify existence
-  const user = await prisma.user.findUnique({
-    where: { clerkUserId: userId },
-  });
+    // Find user or create if not exists
+    let user = await prisma.user.findUnique({
+      where: { clerkUserId: userId },
+    });
+    console.log("User found in database:", user);
 
-  if (!user) {
-    throw new Error("User not found");
-  }
+    if (!user) {
+      console.log("User not found, creating new user");
+      try {
+        // Get user details from Clerk
+        const clerkUser = await clerkClient.users.getUser(userId);
+        console.log("Clerk user details:", clerkUser);
+        
+        // Create user in the database
+        user = await prisma.user.create({
+          data: {
+            clerkUserId: userId,
+            email: clerkUser.emailAddresses[0].emailAddress,
+            name: `${clerkUser.firstName} ${clerkUser.lastName}`,
+            imageUrl: clerkUser.imageUrl,
+          },
+        });
+        console.log("User created:", user);
+      } catch (error) {
+        console.error("Error creating user:", error);
+        throw new Error("Failed to create user");
+      }
+    }
 
-  // Get project with all related data
-  const project = await prisma.project.findUnique({
-    where: { id: projectId },
-    include: {
-      sprints: {
-        include: {
-          issues: {
-            include: {
-              reporter: true,
-              assignee: true,
+    // Get project with all related data
+    const project = await prisma.project.findUnique({
+      where: { id: projectId },
+      include: {
+        sprints: {
+          include: {
+            issues: {
+              include: {
+                reporter: true,
+                assignee: true,
+              },
+              orderBy: [
+                { status: 'asc' },
+                { order: 'asc' }
+              ],
             },
-            orderBy: [
-              { status: 'asc' },
-              { order: 'asc' }
-            ],
+          },
+          orderBy: { createdAt: "desc" },
+        },
+        issues: {
+          include: {
+            reporter: true,
+            assignee: true,
+            sprint: true,
+          },
+          orderBy: [
+            { status: 'asc' },
+            { order: 'asc' }
+          ],
+        },
+        _count: {
+          select: {
+            issues: true,
+            sprints: true,
           },
         },
-        orderBy: { createdAt: "desc" },
       },
-      issues: {
-        include: {
-          reporter: true,
-          assignee: true,
-          sprint: true,
-        },
-        orderBy: [
-          { status: 'asc' },
-          { order: 'asc' }
-        ],
-      },
-      _count: {
-        select: {
-          issues: true,
-          sprints: true,
-        },
-      },
-    },
-  });
+    });
+    console.log("Project found:", project);
 
-  if (!project) {
-    throw new Error("Project not found");
+    if (!project) {
+      throw new Error("Project not found");
+    }
+
+    // Verify project belongs to the organization
+    if (project.organizationId !== orgId) {
+      throw new Error("Unauthorized access to project");
+    }
+
+    return project;
+  } catch (error) {
+    console.error("Error in getProject:", error);
+    throw error;
   }
-
-  // Verify project belongs to the organization
-  if (project.organizationId !== orgId) {
-    return null;
-  }
-
-  return project;
 }
 
 export async function getProjects() {

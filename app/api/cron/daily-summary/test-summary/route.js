@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { analyzeWorkflow } from '@/lib/gemini';
 import { sendDailySummary } from '@/lib/email';
-import prisma from '@/lib/prisma';
+import { prisma } from '@/lib/prisma';
 
 export async function GET() {
   try {

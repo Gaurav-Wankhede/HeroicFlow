@@ -44,17 +44,43 @@ export default function CreateProjectPage() {
   } = useFetch(createProject);
 
   const onSubmit = async (data) => {
+    console.log("onSubmit function called with data:", data);
     if (!isAdmin) {
       alert("Only organization admins can create projects");
       return;
     }
 
-    createProjectFn(data);
+    try {
+      console.log("Starting project creation...");
+      console.log("Creating project with data:", data);
+      const result = await createProjectFn(data);
+      console.log("Project creation result:", result);
+      if (result.error) {
+        console.error("Error in result:", result.error);
+        throw new Error(result.error);
+      }
+      if (result) {
+        console.log("Project created successfully:", result);
+        router.push(`/project/${result.id}`);
+      } else {
+        console.warn("Result is falsy:", result);
+        throw new Error("Failed to create project: No result returned");
+      }
+    } catch (error) {
+      console.error("Error creating project:", error);
+      alert(`Failed to create project: ${error.message}`);
+    } finally {
+      console.log("Project creation attempt completed");
+    }
   };
 
   useEffect(() => {
-    if (project) router.push(`/project/${project.id}`);
-  }, [loading]);
+    console.log("Current state:", { project, loading, error });
+    if (project && !loading && !error) {
+      console.log("Redirecting to project page:", project.id);
+      router.push(`/project/${project.id}`);
+    }
+  }, [project, loading, error, router]);
 
   if (!isOrgLoaded || !isUserLoaded) {
     return null;
@@ -94,6 +120,20 @@ export default function CreateProjectPage() {
 
             <div>
               <label className="block mb-2 text-gray-700 dark:text-gray-200">
+                Project Key
+              </label>
+              <Input
+                {...register("key")}
+                className="w-full bg-white border-gray-300 dark:bg-gray-800 dark:border-gray-700"
+                placeholder="Enter project key (e.g., PRJ)"
+              />
+              {errors.key && (
+                <p className="text-red-500 text-sm mt-1">{errors.key.message}</p>
+              )}
+            </div>
+
+            <div>
+              <label className="block mb-2 text-gray-700 dark:text-gray-200">
                 Description
               </label>
               <Textarea
@@ -103,9 +143,7 @@ export default function CreateProjectPage() {
                 rows={4}
               />
               {errors.description && (
-                <p className="text-red-500 text-sm mt-1">
-                  {errors.description.message}
-                </p>
+                <p className="text-red-500 text-sm mt-1">{errors.description.message}</p>
               )}
             </div>
 

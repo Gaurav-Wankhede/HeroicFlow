@@ -19,17 +19,36 @@ export async function createSprint(projectId, data) {
     throw new Error("Project not found");
   }
 
-  const sprint = await prisma.sprint.create({
-    data: {
-      name: data.name,
-      startDate: data.startDate,
-      endDate: data.endDate,
-      status: "PLANNED",
+  // Check if a sprint with the same name already exists in this project
+  const existingSprint = await prisma.sprint.findFirst({
+    where: {
       projectId: projectId,
+      name: data.name,
     },
   });
 
-  return sprint;
+  if (existingSprint) {
+    throw new Error("A sprint with this name already exists in the project");
+  }
+
+  try {
+    const sprint = await prisma.sprint.create({
+      data: {
+        name: data.name,
+        startDate: data.startDate,
+        endDate: data.endDate,
+        status: "PLANNED",
+        projectId: projectId,
+      },
+    });
+
+    return sprint;
+  } catch (error) {
+    if (error.code === 'P2002' && error.meta?.target?.includes('name')) {
+      throw new Error("A sprint with this name already exists in the project");
+    }
+    throw error;
+  }
 }
 
 export async function updateSprintStatus(sprintId, newStatus) {

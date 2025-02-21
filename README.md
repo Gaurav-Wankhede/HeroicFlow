@@ -77,17 +77,6 @@ DATABASE_URL=your_postgresql_url
 NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=your_clerk_publishable_key
 CLERK_SECRET_KEY=your_clerk_secret_key
 
-# Stripe Configuration
-NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=your_stripe_publishable_key
-STRIPE_SECRET_KEY=your_stripe_secret_key
-STRIPE_WEBHOOK_SECRET=your_stripe_webhook_secret
-
-# Stripe Price IDs
-NEXT_PUBLIC_STRIPE_PRO_MONTHLY_PRICE_ID=your_pro_monthly_price_id
-NEXT_PUBLIC_STRIPE_PRO_YEARLY_PRICE_ID=your_pro_yearly_price_id
-NEXT_PUBLIC_STRIPE_ENTERPRISE_MONTHLY_PRICE_ID=your_enterprise_monthly_price_id
-NEXT_PUBLIC_STRIPE_ENTERPRISE_YEARLY_PRICE_ID=your_enterprise_yearly_price_id
-
 # App URL
 NEXT_PUBLIC_APP_URL=http://localhost:3000
 ```
@@ -116,10 +105,7 @@ npx prisma db push
 npm run dev
 ```
 
-5. Set up Stripe webhook:
-```bash
-stripe listen --forward-to localhost:3000/api/webhooks/subscription
-```
+5. Open [http://localhost:3000](http://localhost:3000) in your browser
 
 ## Subscription Plans
 
@@ -162,11 +148,7 @@ project-management-tool/
 
 ## Contributing
 
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for more details.
 
 ## License
 

@@ -102,7 +102,7 @@ export default function Home() {
           Empower your team with our AI-driven project management solution.
         </p>
         <p className={`text-xl mb-12 max-w-2xl mx-auto ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}></p>
-        <Link href="/onboarding">
+        <Link href="/project/create">
           <Button size="lg" className={`mr-4 ${theme === 'dark' ? 'bg-blue-600 hover:bg-blue-700' : 'bg-blue-500 hover:bg-blue-600'}`}>
             Experience AI-Flow <ChevronRight size={18} className="ml-1" />
           </Button>
