@@ -90,6 +90,18 @@ export default function SprintManager({
     router.replace(`/project/${projectId}`, undefined, { shallow: true });
   };
 
+  useEffect(() => {
+    if (sprints && sprints.length > 0) {
+      setSprint(sprints[0]);
+    }
+  }, [sprints, setSprint]);
+
+  useEffect(() => {
+    if (sprint?.id) {
+      fetchSprintIssues();
+    }
+  }, [sprint?.id, fetchSprintIssues, setSprint]);
+
   return (
     <>
       <div className="flex justify-between items-center gap-4">

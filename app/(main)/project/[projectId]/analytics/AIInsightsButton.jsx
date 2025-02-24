@@ -28,7 +28,7 @@ export default function AIInsightsButton({ project }) {
   const [loading, setLoading] = useState(false);
   const [summary, setSummary] = useState(null);
   const [error, setError] = useState(null);
-  const { theme } = useTheme();
+  const { setTheme } = useTheme();
 
   const generateInsights = async () => {
     setLoading(true);

@@ -135,9 +135,8 @@ export default function ContactPage() {
           <h1 className={`text-4xl text-center md:text-5xl font-bold mb-6 mt-10 bg-clip-text text-transparent ${theme === 'dark' ? 'bg-gradient-to-r from-purple-400 to-pink-600' : 'bg-gradient-to-r from-blue-600 to-teal-500'}`}>
             Get in Touch
           </h1>
-          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            Have questions about HeroicFlow? We're here to help. Send us a message
-            and we'll respond as soon as possible.
+          <p className="text-gray-600 mb-4">
+            We&apos;d love to hear from you! Whether you have a question about features, pricing, need a demo, or anything else, our team is ready to answer all your questions.
           </p>
 
 

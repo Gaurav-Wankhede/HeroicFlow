@@ -19,6 +19,7 @@ export default function BoardFilters({ issues, onFilterChange }) {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedAssignees, setSelectedAssignees] = useState([]);
   const [selectedPriority, setSelectedPriority] = useState("");
+  const [selectedStatus, setSelectedStatus] = useState("");
 
   const assignees = issues
     .map((issue) => issue.assignee)
@@ -27,15 +28,14 @@ export default function BoardFilters({ issues, onFilterChange }) {
     );
 
   useEffect(() => {
-    const filteredIssues = issues.filter(
-      (issue) =>
-        issue.title.toLowerCase().includes(searchTerm.toLowerCase()) &&
-        (selectedAssignees.length === 0 ||
-          selectedAssignees.includes(issue.assignee?.id)) &&
-        (selectedPriority === "" || issue.priority === selectedPriority)
-    );
-    onFilterChange(filteredIssues);
-  }, [searchTerm, selectedAssignees, selectedPriority, issues]);
+    if (selectedAssignees.length > 0 || selectedPriority !== "" || selectedStatus !== "") {
+      onFilterChange({
+        assignee: selectedAssignees.length > 0 ? selectedAssignees[0] : null,
+        priority: selectedPriority,
+        status: selectedStatus,
+      });
+    }
+  }, [selectedAssignees, selectedPriority, selectedStatus, onFilterChange]);
 
   const toggleAssignee = (assigneeId) => {
     setSelectedAssignees((prev) =>
@@ -49,12 +49,14 @@ export default function BoardFilters({ issues, onFilterChange }) {
     setSearchTerm("");
     setSelectedAssignees([]);
     setSelectedPriority("");
+    setSelectedStatus("");
   };
 
   const isFiltersApplied =
     searchTerm !== "" ||
     selectedAssignees.length > 0 ||
-    selectedPriority !== "";
+    selectedPriority !== "" ||
+    selectedStatus !== "";
 
   return (
     <div className="space-y-4">

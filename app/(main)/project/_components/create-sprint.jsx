@@ -8,7 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
-import { CalendarIcon } from "lucide-react";
+import { CalendarIcon, ChevronLeft, ChevronRight } from "lucide-react";
 import { DayPicker } from "react-day-picker";
 import { format, addDays } from "date-fns";
 import { sprintSchema } from "@/app/lib/validators";
